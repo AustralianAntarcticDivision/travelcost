@@ -33,12 +33,13 @@ devtools::install_github("AustralianAntarcticDivision/travelcost")
 
 ```{r example, warning = FALSE, message = FALSE}
 library(travelcost)
-my_raster <- raster::raster(ext = raster::extent(c(152.75, 155.25, -56.25, -54.25)), res = c(0.5, 0.5),
-                            crs = "+proj=longlat")
+my_raster <- raster::raster(ext = raster::extent(c(150.25, 160.25, -57.25, -53.25)),
+                            res = c(0.5, 0.5), crs = "+proj=longlat")
+
 g <- tc_build_graph(my_raster)
 
-## set random edge weights
-g <- tc_set_edge_weights(g, values = runif(sum(tc_adj_matrix(g) > 0)))
+## set edge weights by geographic distance
+g <- tc_set_edge_weights(g, fun = geosphere::distHaversine)
 
 ## start point to calculate distances from
 cx <- c(154, -55)
