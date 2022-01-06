@@ -37,12 +37,6 @@ D <- tc_cost(g, from = cx)
 
 ## plot it
 library(raster)
-#> Loading required package: sp
-#> 
-#> Attaching package: 'raster'
-#> The following object is masked from 'package:lme4':
-#> 
-#>     getData
 plot(D, col = rev(hcl.colors(51, palette = "Spectral")))
 points(cx[1], cx[2], col = 1, bg = 1, pch = 21)
 ```
