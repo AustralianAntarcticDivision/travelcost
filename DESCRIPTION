@@ -1,6 +1,6 @@
 Package: travelcost
 Title: Estimate the cost of travel
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: person(given = "Ben", family = "Raymond", role = c("aut", "cre"), email = "ben.raymond@aad.gov.au")
 Description: Estimate the cost of travel on a geographic grid, taking into account factors such as terrain, slope, or wind or current speeds.
 License: MIT + file LICENSE
@@ -15,3 +15,4 @@ Suggests:
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
+VignetteBuilder: knitr

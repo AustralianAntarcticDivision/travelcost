@@ -4,7 +4,7 @@
 #'
 #' @param x Raster: a raster layer defining the extent, projection, and resolution of the grid
 #' @param directed logical: if `TRUE`, the graph is directed (meaning that the cost of travel from cell x to cell y is not necessarily the same as the cost of travel from cell y to cell x)
-#' @param neighbours integer: either 4 (each cell is connected to its cardinal neighbours) or 8 (each cell is connected to all 8 neighbouring cells)
+#' @param neighbours integer: either 4 (each cell is connected to its cardinal neighbours) or 8 (each cell is connected to all 8 neighbouring cells) or 16 (8 neighbouring cells plus the next 8 that do not lie in cardinal or directly diagonal directions)
 #' @param wrap_x logical: if `TRUE`, the graph is wrapped in the x direction (appropriate if the grid represents the full 360 longitude span of the globe)
 #'
 #' @return An object of class `tc_graph`
@@ -21,7 +21,7 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
     nx <- ncol(x)
     ny <- nrow(x)
     ngrid <- nx * ny
-    if (!neighbours %in% c(4, 8)) stop("neighbours must be 4 or 8")
+    if (!neighbours %in% c(4, 8, 16)) stop("neighbours must be 4, 8, or 16")
     wrap_x <- isTRUE(wrap_x)
     ## horrible code to build connected graph
     ## row-columnto index, row-filled
@@ -34,15 +34,18 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
     ind2r <- function(ind, sz = c(ny, nx)) floor((ind - 1) / sz[2] + 1)
 
     ## each cell in our grid gets connected to neighbouring cells
-    ## expect that we have full 4- or 8-neighbours for all cells except at min and max latitudes, and 5 neighbours for anything at max or min latitude
-    expected_sum <- if (neighbours == 8) {
-                        (4 * nx * (ny - 2) + 5 * nx) ## this is all the edges for an undirected graph, or half the number of edges for a directed graph
-                    } else {
-                        ## 4 neighbours only
-                        (2 * nx * (ny - 2) + 3 * nx)
-                    }
-    if (!wrap_x) {
-        expected_sum <- expected_sum - ny - (isTRUE(neighbours == 8)) * 2 * (ny - 1)
+    ## expected_sum is the full number of edges for an undirected graph, or half the number of edges for a directed graph
+    ## 4 neighbours
+    expected_sum <- ny * if (wrap_x) nx else (nx - 1) ## E neighbours
+    expected_sum <- expected_sum + nx * (ny - 1) ## S neighbour
+    if (neighbours >= 8) {
+        expected_sum <- expected_sum + 2 * ((ny - 1) * if (wrap_x) nx else (nx - 1)) ## *2 because SE, SW neighbour counts are the same
+    }
+    if (neighbours == 16) {
+        ## SSW, SSE neighbours: 2 neighbours but not for last 2 rows
+        expected_sum <- expected_sum + 2 * (ny - 2) * if (wrap_x) nx else (nx - 1)
+        ## EES, WWS neighbours: 2 neighbours but not for last row
+        expected_sum <- expected_sum + 2 * (ny - 1) * if (wrap_x) nx else (nx - 2)
     }
 
     edge_from <- rep(NA_integer_, expected_sum)
@@ -72,7 +75,7 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
     edge_to[ptr:(ptr+length(nbfrom)-1)] <- nbto
     ptr <- ptr+length(nbfrom)
 
-    if (neighbours == 8) {
+    if (neighbours >= 8) {
         ## SW neighbour (exclude last row and first column)
         nbfrom <- setdiff(seq_len(ngrid - nx), rc2ind(seq_len(ny - 1), 1))
         nbto <- nbfrom + nx - 1
@@ -104,13 +107,78 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
         }
     }
 
+    if (neighbours == 16) {
+        ## SSE neighbour (exclude last 2 rows and last column)
+        nbfrom <- setdiff(seq_len(ngrid - 2 * nx), rc2ind(seq_len(ny), nx))
+        nbto <- nbfrom + 2 * nx + 1
+        edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+        edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+        ptr <- ptr + length(nbfrom)
+        if (wrap_x) {
+            ## SSE last col
+            nbfrom <- rc2ind(seq_len(ny - 2), nx)
+            nbto <- nbfrom + nx + 1
+            edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+            edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+            ptr <- ptr + length(nbfrom)
+        }
+
+        ## SSW neighbour (exclude last 2 rows and first column)
+        nbfrom <- setdiff(seq_len(ngrid - 2 * nx), rc2ind(seq_len(ny), 1))
+        nbto <- nbfrom + 2 * nx - 1
+        edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+        edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+        ptr <- ptr + length(nbfrom)
+        if (wrap_x) {
+            ## SSW first col
+            nbfrom <- rc2ind(seq_len(ny - 2), 1)
+            nbto <- nbfrom + 3 * nx - 1
+            edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+            edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+            ptr <- ptr + length(nbfrom)
+        }
+
+        ## EES neighbour (exclude last row and last 2 columns)
+        nbfrom <- setdiff(seq_len(ngrid - nx), rc2ind(seq_len(ny), nx))
+        nbfrom <- setdiff(nbfrom, rc2ind(seq_len(ny), nx - 1))
+        nbto <- nbfrom + nx + 2
+        edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+        edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+        ptr <- ptr + length(nbfrom)
+        if (wrap_x) {
+            ## EES last 2 cols excluding last row element
+            nbfrom <- c(rc2ind(seq_len(ny - 1), nx), rc2ind(seq_len(ny - 1), nx - 1))
+            nbto <- nbfrom + 2
+            edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+            edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+            ptr <- ptr + length(nbfrom)
+        }
+
+        ## WWS neighbour (exclude last row and first 2 columns)
+        nbfrom <- setdiff(seq_len(ngrid - nx), rc2ind(seq_len(ny), 1))
+        nbfrom <- setdiff(nbfrom, rc2ind(seq_len(ny), 2))
+        nbto <- nbfrom + nx - 2
+        edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+        edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+        ptr <- ptr + length(nbfrom)
+        if (wrap_x) {
+            ## WWS first 2 cols excluding last row element
+            nbfrom <- c(rc2ind(seq_len(ny - 1), 1), rc2ind(seq_len(ny - 1), 2))
+            nbto <- nbfrom + 2 * nx - 2
+            edge_from[ptr:(ptr + length(nbfrom) - 1)] <- nbfrom
+            edge_to[ptr:(ptr + length(nbfrom) - 1)] <- nbto
+            ptr <- ptr + length(nbfrom)
+        }
+    }
+
+    if (ptr != (expected_sum + 1L)) stop("edge count in A is not as expected")
     A <- sparseMatrix(i = edge_from, j = edge_to, dims = c(ngrid, ngrid))
     if (isTRUE(directed)) {
         ## directed graph, so we need each edge to be duplicated in its reverse direction
         A <- A | t(A)
         expected_sum <- expected_sum * 2
     }
-    if (sum(A) != expected_sum) stop("A not as expected")
+    if (sum(A) != expected_sum) stop("edge count in A is not as expected")
 
     if (isTRUE(directed)) {
         ## extract the indices of A, which give us the full edge_from and edge_to vectors

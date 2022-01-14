@@ -17,7 +17,7 @@ tc_adj_matrix(x)
 
 \item{directed}{logical: if \code{TRUE}, the graph is directed (meaning that the cost of travel from cell x to cell y is not necessarily the same as the cost of travel from cell y to cell x)}
 
-\item{neighbours}{integer: either 4 (each cell is connected to its cardinal neighbours) or 8 (each cell is connected to all 8 neighbouring cells)}
+\item{neighbours}{integer: either 4 (each cell is connected to its cardinal neighbours) or 8 (each cell is connected to all 8 neighbouring cells) or 16 (8 neighbouring cells plus the next 8 that do not lie in cardinal or directly diagonal directions)}
 
 \item{wrap_x}{logical: if \code{TRUE}, the graph is wrapped in the x direction (appropriate if the grid represents the full 360 longitude span of the globe)}
 }
