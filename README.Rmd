@@ -69,7 +69,7 @@ extent(dem) <- c(xmin = 0, xmax = ncol(dem) * 10, ymin = 0, ymax = nrow(dem) * 1
 point_1 <- c(150, 600)
 point_2 <- c(500, 650)
 
-plot(dem)
+plot(dem, legend.args = list(text = "Elevation (m)"), axes = FALSE, box = FALSE)
 points(point_1[1], point_1[2], col = 1, bg = "blue", pch = 21)
 text(point_1[1], point_1[2], "Point 1", adj = 1.1)
 points(point_2[1], point_2[2], col = 1, bg = "blue", pch = 21)
@@ -117,7 +117,7 @@ And finally use it to find the most energetically-efficient path between our two
 ```{r example2e}
 p <- tc_shortest_paths(g, from = point_1, to = point_2)[[1]]
 
-plot(dem)
+plot(dem, legend.args = list(text = "Elevation (m)"), axes = FALSE, box = FALSE)
 lines(p[, 1], p[, 2])
 points(point_1[1], point_1[2], col = 1, bg = "blue", pch = 21)
 text(point_1[1], point_1[2], "Point 1", adj = 1.1)
