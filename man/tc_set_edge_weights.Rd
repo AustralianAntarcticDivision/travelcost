@@ -24,7 +24,7 @@ Set the edge weights of a travelcost graph
   my_raster <- raster::raster(ext = raster::extent(c(152.75, 155.25, -56.25, -54.25)),
                               res = c(0.5, 0.5), crs = "+proj=longlat")
   g <- tc_build_graph(my_raster)
-  ## set weights according to geographic distance
+  ## set weights according to great-circle distance
   g <- tc_set_edge_weights(g, fun = geosphere::distHaversine)
 }
 }

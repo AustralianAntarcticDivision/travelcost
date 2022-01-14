@@ -36,7 +36,7 @@ cost0 <- raster::distanceFromPoints(my_raster, from)
 ## construct a graph with only 4-neighbour connectivity
 g4 <- tc_build_graph(my_raster, neighbours = 4)
 
-## set edge weights by geographic distance
+## set edge weights by great-circle distance
 g4 <- tc_set_edge_weights(g4, fun = geosphere::distHaversine)
 
 ## estimated distances from one cell to all others
@@ -55,7 +55,7 @@ We can mitigate this effect by connecting each cell to all eight of its immediat
 ```{r conn8}
 g8 <- tc_build_graph(my_raster, neighbours = 8)
 
-## set edge weights by geographic distance
+## set edge weights by great-circle distance
 g8 <- tc_set_edge_weights(g8, fun = geosphere::distHaversine)
 
 ## estimated distances from one cell to all others
@@ -73,7 +73,7 @@ Now, our estimate when moving east, south, or south-east is exact. Moving at int
 ```{r conn16}
 g16 <- tc_build_graph(my_raster, neighbours = 16)
 
-## set edge weights by geographic distance
+## set edge weights by great-circle distance
 g16 <- tc_set_edge_weights(g16, fun = geosphere::distHaversine)
 
 ## estimated distances from one cell to all others
