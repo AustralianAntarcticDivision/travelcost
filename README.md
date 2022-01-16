@@ -18,39 +18,14 @@ factors such as terrain, slope, or wind or current speeds.
 devtools::install_github("AustralianAntarcticDivision/travelcost")
 ```
 
-## Example
-
-Simple cost by geodesic distance:
-
-``` r
-library(travelcost)
-my_raster <- raster::raster(ext = raster::extent(c(150.25, 160.25, -57.25, -53.25)),
-                            res = c(0.5, 0.5), crs = "+proj=longlat")
-
-g <- tc_build_graph(my_raster)
-
-## set edge weights by great-circle distance
-g <- tc_set_edge_weights(g, fun = geosphere::distHaversine)
-
-## start point to calculate distances from
-cx <- c(154, -55)
-
-## calculate travel cost
-D <- tc_cost(g, from = cx)
-
-## plot it
-library(raster)
-plot(D, col = rev(hcl.colors(51, palette = "Spectral")))
-points(cx[1], cx[2], col = 1, bg = 1, pch = 21)
-```
-
-<img src="man/figures/README-example-1.png" width="100%" />
-
-## Example 2: cost of walking over hilly terrain
+## Example: the cost of walking over hilly terrain
 
 Let’s use the volcano example data as an elevation raster:
 
 ``` r
+library(travelcost)
+library(raster)
+
 dem <- raster(volcano)
 projection(dem) <- "+proj=laea +lat_0=-50"
 ## 10m spatial resolution
@@ -68,8 +43,8 @@ text(point_2[1], point_2[2], "Point 2", adj = -0.1)
 
 <img src="man/figures/README-example2a-1.png" width="100%" />
 
-We wish to find the optimal path to follow to get from point 1 to point
-2.
+We wish to find the most energetically-efficient path to follow to get
+from point 1 to point 2.
 
 The energetic cost of walking as a function of slope, given by [Minetti
 et al. (2002)](https://doi.org/10.1152/japplphysiol.01177.2001) is:
