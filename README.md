@@ -35,6 +35,7 @@ point_1 <- c(150, 600)
 point_2 <- c(500, 650)
 
 plot(dem, legend.args = list(text = "Elevation (m)"), axes = FALSE, box = FALSE)
+contour(dem, add = TRUE, lty = 2, levels = c(100, 120, 140, 160, 180), col = "#606060")
 points(point_1[1], point_1[2], col = 1, bg = "blue", pch = 21)
 text(point_1[1], point_1[2], "Point 1", adj = 1.1)
 points(point_2[1], point_2[2], col = 1, bg = "blue", pch = 21)
@@ -86,6 +87,7 @@ our two points:
 p <- tc_shortest_paths(g, from = point_1, to = point_2)[[1]]
 
 plot(dem, legend.args = list(text = "Elevation (m)"), axes = FALSE, box = FALSE)
+contour(dem, add = TRUE, lty = 2, levels = c(100, 120, 140, 160, 180), col = "#606060")
 lines(p[, 1], p[, 2])
 points(point_1[1], point_1[2], col = 1, bg = "blue", pch = 21)
 text(point_1[1], point_1[2], "Point 1", adj = 1.1)
