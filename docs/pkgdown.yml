@@ -1,0 +1,7 @@
+pandoc: 2.11.4
+pkgdown: 1.6.1
+pkgdown_sha: ~
+articles:
+  connectivity_effect: connectivity_effect.html
+last_built: 2022-01-16T22:16Z
+
