@@ -172,10 +172,10 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
     }
 
     if (ptr != (expected_sum + 1L)) stop("edge count in A is not as expected")
-    A <- sparseMatrix(i = edge_from, j = edge_to, dims = c(ngrid, ngrid))
+    A <- sparseMatrix(i = edge_from, j = edge_to, x = 1, dims = c(ngrid, ngrid), repr = "T")
     if (isTRUE(directed)) {
         ## directed graph, so we need each edge to be duplicated in its reverse direction
-        A <- A | t(A)
+        A <- A + t(A)
         expected_sum <- expected_sum * 2
     }
     if (sum(A) != expected_sum) stop("edge count in A is not as expected")
@@ -186,7 +186,7 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
     ##     edge_from <- temp[, 1]
     ##     edge_to <- temp[, 2]
     ## }
-    structure(list(A = A, directed = directed, template = raster::raster(x)), class = "tc_graph")
+    structure(list(A = as(A, "dgTMatrix"), directed = directed, template = raster::raster(x)), class = "tc_graph")
 }
 
 #' @method plot tc_graph
@@ -198,7 +198,8 @@ plot.tc_graph <- function(x, y, ...) {
     ## some plotting weirdness when weights are very large
     scaled_A <- tc_adj_matrix(x) / max(tc_adj_matrix(x), na.rm = TRUE) * 5
     scaled_A[is.na(scaled_A)] <- 0
-    g <- igraph::graph_from_adjacency_matrix(as(as(scaled_A, "dgCMatrix"), "dgTMatrix"), mode = if (x$directed) "directed" else "undirected")
+    ##g <- igraph::graph_from_adjacency_matrix(as(as(scaled_A, "dgCMatrix"), "dgTMatrix"), mode = if (x$directed) "directed" else "undirected")
+    g <- igraph::graph_from_adjacency_matrix(scaled_A, mode = if (x$directed) "directed" else "undirected")
     rgs$x <- g
     do.call(plot, rgs)
 }
@@ -232,16 +233,16 @@ tc_adj_matrix <- function(x) x$A
 #' @export
 tc_set_edge_weights <- function(x, fun, values) {
     if (!missing(values)) {
-        if (inherits(x$A, "lgCMatrix")) x$A <- as(x$A, "dgCMatrix")
-        x$A@x <- values ##x$A[which(x$A > 0)] <- values
+        x$A@x <- values
         return(x)
     }
     if (!is.function(fun)) fun <- match.fun(fun)
     ll <- coordinates(tc_raster(x))
-    temp <- which(tc_adj_matrix(x), arr.ind = TRUE) ## col1 is the "from" node, col2 is the to node
-    ## possibly more efficient to do that using tc_adj_matrix(x)@i TODO
-    w <- fun(ll[temp[, 1], ], ll[temp[, 2], ])
-    x$A <- sparseMatrix(temp[, 1], temp[, 2], x = w)
+    ##temp <- which(tc_adj_matrix(x), arr.ind = TRUE) ## col1 is the "from" node, col2 is the to node
+    ##w <- fun(ll[temp[, 1], ], ll[temp[, 2], ])
+    ##x$A <- as(sparseMatrix(temp[, 1], temp[, 2], x = w, repr = "T"), "dgTMatrix")
+    ## more efficient
+    x$A@x <- fun(ll[x$A@i + 1, ], ll[x$A@j + 1, ]) ## @i and @j are zero-based
     x
 }
 
