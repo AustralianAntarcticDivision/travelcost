@@ -180,12 +180,12 @@ tc_build_graph <- function(x, directed = TRUE, neighbours = 8, wrap_x = FALSE) {
     }
     if (sum(A) != expected_sum) stop("edge count in A is not as expected")
 
-    if (isTRUE(directed)) {
-        ## extract the indices of A, which give us the full edge_from and edge_to vectors
-        temp <- which(A, arr.ind = TRUE)
-        edge_from <- temp[, 1]
-        edge_to <- temp[, 2]
-    }
+    ## if (isTRUE(directed)) {
+    ##     ## extract the indices of A, which give us the full edge_from and edge_to vectors
+    ##     temp <- which(A, arr.ind = TRUE)
+    ##     edge_from <- temp[, 1]
+    ##     edge_to <- temp[, 2]
+    ## }
     structure(list(A = A, directed = directed, template = raster::raster(x)), class = "tc_graph")
 }
 
@@ -233,12 +233,13 @@ tc_adj_matrix <- function(x) x$A
 tc_set_edge_weights <- function(x, fun, values) {
     if (!missing(values)) {
         if (inherits(x$A, "lgCMatrix")) x$A <- as(x$A, "dgCMatrix")
-        x$A[x$A > 0] <- values
+        x$A@x <- values ##x$A[which(x$A > 0)] <- values
         return(x)
     }
     if (!is.function(fun)) fun <- match.fun(fun)
     ll <- coordinates(tc_raster(x))
     temp <- which(tc_adj_matrix(x), arr.ind = TRUE) ## col1 is the "from" node, col2 is the to node
+    ## possibly more efficient to do that using tc_adj_matrix(x)@i TODO
     w <- fun(ll[temp[, 1], ], ll[temp[, 2], ])
     x$A <- sparseMatrix(temp[, 1], temp[, 2], x = w)
     x
