@@ -91,10 +91,10 @@ And finally use it to find the most energetically-efficient path between our two
 ```{r example2e}
 p <- tc_shortest_paths(g, from = pts[1, ], to = pts[2, ])[[1]]
 
-#plot(dem, legend.args = list(text = "Elevation (m)"), axes = FALSE, box = FALSE)
-#contour(dem, add = TRUE, lty = 2, levels = c(100, 120, 140, 160, 180), col = "#606060")
-#points(pts$x, pts$y, col = 1, bg = "blue", pch = 21)
-#text(pts$x, pts$y, pts$label, adj = c(1.1, 1.1))
+plot(dem, legend.args = list(text = "Elevation (m)"), axes = FALSE, box = FALSE)
+contour(dem, add = TRUE, lty = 2, levels = c(100, 120, 140, 160, 180), col = "#606060")
+points(pts$x, pts$y, col = 1, bg = "blue", pch = 21)
+text(pts$x, pts$y, pts$label, adj = c(1.1, 1.1))
 ## and the optimal path
 lines(p[, 1], p[, 2])
 plast <- tail(p, 2)
